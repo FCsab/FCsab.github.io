@@ -33,6 +33,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
@@ -60,10 +62,74 @@
             color: #4b3b6b;
             box-shadow: 0 0 15px #d4bfff;
         }
+
+        .snowflake {
+            position: absolute;
+            background: white;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            opacity: 0.8;
+            animation: fall 10s linear infinite;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(100vh); }
+        }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth();
+
+            if (currentMonth === 9) { // October 9
+                document.body.style.background = 'linear-gradient(135deg, #000000, #ff7518)';
+                document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.8)';
+                document.querySelector('h1').style.color = '#ff7518';
+                document.querySelectorAll('.link-button').forEach(button => {
+                    button.style.background = '#333333';
+                    button.style.color = '#ff7518';
+                });
+            } else if (currentMonth === 11) { // December 11
+                document.body.style.background = 'linear-gradient(135deg, #001f3f, #0074D9)';
+                document.querySelector('.container').style.background = 'rgba(0, 31, 63, 0.8)';
+                document.querySelector('h1').style.color = '#7FDBFF';
+                document.querySelectorAll('.link-button').forEach(button => {
+                    button.style.background = '#0074D9';
+                    button.style.color = '#7FDBFF';
+                });
+
+                // Add snowflakes
+                const snowflakes = [];
+                for (let i = 0; i < 100; i++) {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'snowflake';
+                    snowflake.style.left = `${Math.random() * 100}vw`;
+                    snowflake.style.top = `${Math.random() * 100}vh`;
+                    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                    snowflake.style.opacity = Math.random();
+                    snowflake.style.transform = `scale(${Math.random()})`;
+                    document.body.appendChild(snowflake);
+                    snowflakes.push(snowflake);
+                }
+
+                // After a short delay, make snowflakes fall from the top
+                setTimeout(() => {
+                    snowflakes.forEach(snowflake => {
+                        snowflake.style.top = '-10px';
+                        snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+                        snowflake.style.opacity = Math.random();
+                        snowflake.style.transform = `scale(${Math.random()})`;
+                    });
+                }, 5000); // 5 seconds delay
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
+        <h1></h1>
         <a href="https://www.instagram.com/frg.csaba/" class="link-button">Instagram</a>
         <a href="https://github.com/FCsab" class="link-button">GitHub</a>
         <a href="https://discordapp.com/users/873277922989985873" class="link-button">Discord</a>
