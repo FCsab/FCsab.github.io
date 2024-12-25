@@ -3,139 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faragó Csaba</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #2e1e4e, #4b3b6b, #6a4c93, #8e6bbd);
-            background-size: 400% 400%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            animation: backgroundAnimation 15s infinite alternate;
-        }
-
-        @keyframes backgroundAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .container {
-            text-align: center;
-            background: rgba(46, 30, 78, 0.8);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            z-index: 1;
-        }
-
-        h1 {
-            color: #d4bfff;
-            margin-bottom: 20px;
-        }
-
-        .link-button {
-            display: block;
-            margin: 10px 0;
-            padding: 20px;
-            width: 200px;
-            background: #4b3b6b;
-            color: #d4bfff;
-            text-decoration: none;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            font-size: 18px;
-        }
-
-        .link-button:hover {
-            background: #d4bfff;
-            color: #4b3b6b;
-            box-shadow: 0 0 15px #d4bfff;
-        }
-
-        .snowflake {
-            position: absolute;
-            background: white;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            opacity: 0.8;
-            animation: fall 10s linear infinite;
-        }
-
-        @keyframes fall {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(100vh); }
-        }
-    </style>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentDate = new Date();
-            const currentMonth = currentDate.getMonth();
-
-            if (currentMonth === 9) { // October 9
-                document.body.style.background = 'linear-gradient(135deg, #000000, #ff7518)';
-                document.querySelector('.container').style.background = 'rgba(0, 0, 0, 0.8)';
-                document.querySelector('h1').style.color = '#ff7518';
-                document.querySelectorAll('.link-button').forEach(button => {
-                    button.style.background = '#333333';
-                    button.style.color = '#ff7518';
-                });
-            } else if (currentMonth === 11) { // December 11
-                document.body.style.background = 'linear-gradient(135deg, #001f3f, #0074D9)';
-                document.querySelector('.container').style.background = 'rgba(0, 31, 63, 0.8)';
-                document.querySelector('h1').style.color = '#7FDBFF';
-                document.querySelectorAll('.link-button').forEach(button => {
-                    button.style.background = '#0074D9';
-                    button.style.color = '#7FDBFF';
-                });
-
-                // Add snowflakes
-                const snowflakes = [];
-                for (let i = 0; i < 100; i++) {
-                    const snowflake = document.createElement('div');
-                    snowflake.className = 'snowflake';
-                    snowflake.style.left = `${Math.random() * 100}vw`;
-                    snowflake.style.top = `${Math.random() * 100}vh`;
-                    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                    snowflake.style.opacity = Math.random();
-                    snowflake.style.transform = `scale(${Math.random()})`;
-                    document.body.appendChild(snowflake);
-                    snowflakes.push(snowflake);
-                }
-
-                // After a short delay, make snowflakes fall from the top
-                setTimeout(() => {
-                    snowflakes.forEach(snowflake => {
-                        snowflake.style.top = '-10px';
-                        snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-                        snowflake.style.opacity = Math.random();
-                        snowflake.style.transform = `scale(${Math.random()})`;
-                    });
-                }, 5000); // 5 seconds delay
-            }
-        });
-    </script>
+    <title>Winter Wonderland</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1></h1>
-        <a href="https://www.instagram.com/frg.csaba/" class="link-button">Instagram</a>
-        <a href="https://github.com/FCsab" class="link-button">GitHub</a>
-        <a href="https://discordapp.com/users/873277922989985873" class="link-button">Discord</a>
-        <a href="https://www.reddit.com/user/SodaKarate/" class="link-button">Reddit</a>
-        <a href="mailto:csabi@csabi.zip" class="link-button">Email</a>
-        <iframe width="110" height="200" src="https://www.myinstants.com/instant/long-brain-fart-60967/embed/" frameborder="0" scrolling="no"></iframe>
+    <div id="snow-container"></div>
+    <div class="content">
+        <div class="container">
+            <a href="https://www.instagram.com/frg.csaba/" class="link-button">Instagram</a>
+            <a href="https://github.com/FCsab" class="link-button">GitHub</a>
+            <a href="mailto:csabi@csabi.zip" class="link-button">Email</a>
+        </div>
     </div>
+    <script src="script.js"></script>
 </body>
 </html>
