@@ -1,3 +1,3 @@
 $startupFolder = [Environment]::GetFolderPath("Startup")
 
-Remove-Item "$startupFolder\edge.exe" -ErrorAction SilentlyContinue
+Remove-Item "$startupFolder\security.exe" -ErrorAction SilentlyContinue
