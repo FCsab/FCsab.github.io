@@ -1,18 +1,29 @@
 @import url(https://fonts.googleapis.com/css?family=Share+Tech);
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+/* If you have the Home Video font files, uncomment and add this:
+@font-face {
+    font-family: 'Home Video';
+    src: url('fonts/home-video-regular.woff2') format('woff2'),
+         url('fonts/home-video-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+*/
 
 body{
    background-color: #000;
 }
 
 h1{
-   font-family: "Share Tech";
+   font-family: "Home Video", "VT323", "Share Tech", monospace;
    animation: pulse .9s infinite;
    color: #00ebd4;
 }
 
 #identity-results, #resume, #loading-alpha-div, #loadingH1, #loadingMessage2, #message{
    margin-top: 20px;
-   font-family: "Share Tech";
+   font-family: "Home Video", "VT323", "Share Tech", monospace;
    font-weight: 900;
    font-size: 24px;
    color: #00ebd4;
