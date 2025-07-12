@@ -49,6 +49,10 @@ function getIconPosition(icon) {
     return { left, top };
 }
 
+function clamp(val, min, max) {
+    return Math.max(min, Math.min(max, val));
+}
+
 function createIcons() {
     let iconContainer = document.getElementById('icon-container');
     if (iconContainer) iconContainer.remove();
@@ -147,12 +151,17 @@ function createIcons() {
                     isDragging = false;
                     dragActive = false;
                     dragIconStartPositions = [];
-                    // px - grid konvertalas
+                    // px - grid konvertalas, fix1
                     getIconElements().forEach((div, idx) => {
                         const left = parseInt(div.style.left, 10);
                         const top = parseInt(div.style.top, 10);
-                        icons[idx].gridX = Math.round((left - 24) / (iconSize + iconSpacing));
-                        icons[idx].gridY = Math.round((top - 24) / (iconSize + iconSpacing));
+                        let gridX = Math.round((left - 24) / (iconSize + iconSpacing));
+                        let gridY = Math.round((top - 24) / (iconSize + iconSpacing));
+                        // fix2
+                        gridX = clamp(gridX, 0, iconsPerRow - 1);
+                        gridY = clamp(gridY, 0, iconsPerCol - 1);
+                        icons[idx].gridX = gridX;
+                        icons[idx].gridY = gridY;
                     });
                     redrawIcons();
                     ev.preventDefault();
@@ -223,8 +232,13 @@ function createIcons() {
                 getIconElements().forEach((div, idx) => {
                     const left = parseInt(div.style.left, 10);
                     const top = parseInt(div.style.top, 10);
-                    icons[idx].gridX = Math.round((left - 24) / (iconSize + iconSpacing));
-                    icons[idx].gridY = Math.round((top - 24) / (iconSize + iconSpacing));
+                    let gridX = Math.round((left - 24) / (iconSize + iconSpacing));
+                    let gridY = Math.round((top - 24) / (iconSize + iconSpacing));
+                    // fix3
+                    gridX = clamp(gridX, 0, iconsPerRow - 1);
+                    gridY = clamp(gridY, 0, iconsPerCol - 1);
+                    icons[idx].gridX = gridX;
+                    icons[idx].gridY = gridY;
                 });
                 redrawIcons();
             } else {
