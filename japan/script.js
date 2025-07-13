@@ -35,6 +35,7 @@ fetch('japan/words.json')
   });
 
 function setMode(selectedMode) {
+  // Only change mode if explicitly requested
   mode = selectedMode;
   
   // Update button states
@@ -46,19 +47,33 @@ function setMode(selectedMode) {
   // Reset stats for new mode
   resetStats();
   
-  nextWord();
+  // Clear any existing feedback and input
   clearFeedback();
   document.getElementById('answer').value = '';
+  
+  // Show first word in the selected mode
+  nextWord();
+  
+  // Focus on input
   document.getElementById('answer').focus();
 }
 
 function nextWord() {
+  // Always use the currently selected mode
   if (!wordsData || !wordsData[mode + 'Words']) {
-    console.error('Words data not loaded yet');
+    console.error('Words data not loaded yet for mode:', mode);
     return;
   }
   
+  // Get words only from the current mode
   const wordList = wordsData[mode + 'Words'];
+  
+  if (!wordList || wordList.length === 0) {
+    console.error('No words available for mode:', mode);
+    return;
+  }
+  
+  // Select random word from the current mode's word list
   currentWord = wordList[Math.floor(Math.random() * wordList.length)];
   const wordElement = document.getElementById('word');
   wordElement.textContent = currentWord.kana;
@@ -82,7 +97,7 @@ function nextWord() {
     this.style.fontSize = '3.5em';
   };
   
-  // Clear previous feedback
+  // Clear previous feedback and input
   clearFeedback();
   document.getElementById('answer').value = '';
   document.getElementById('answer').focus();
@@ -118,7 +133,7 @@ function checkAnswer() {
       stats.bestStreak = stats.streak;
     }
     
-    // Auto-advance after a delay
+    // Auto-advance after a delay - stays in same mode
     setTimeout(() => {
       nextWord();
     }, 2000);
@@ -155,6 +170,7 @@ function skipWord() {
   stats.streak = 0;
   updateStatsDisplay();
   
+  // Skip to next word in the same mode
   setTimeout(() => {
     nextWord();
   }, 2000);
@@ -218,7 +234,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         updateStatsDisplay();
         
-        // Auto-advance after showing feedback
+        // Auto-advance to next word in the same mode
         setTimeout(() => {
           nextWord();
         }, 1000);
