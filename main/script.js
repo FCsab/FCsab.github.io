@@ -23,7 +23,8 @@ const icons = [
     new Icon('instagram', 'img/instagram.png', 'https://www.instagram.com/csabi.zip'),
     new Icon('spotify', 'img/spotify.png', 'https://open.spotify.com/user/31khlgxohmflp7tkwtbr4shpaidm?si=7t5uLS6jTNGfVs3LbS8Qfg'),
     new Icon('steam', 'img/steam.png', 'https://steamcommunity.com/id/csabidotzip/'),
-    new Icon('github', 'img/github.png', 'https://github.com/FCsab')
+    new Icon('github', 'img/github.png', 'https://github.com/FCsab'),
+    new Icon('japanese', 'img/japan.png', 'https://csabi.zip/japan')
 ];
 
 let iconSize = 72; // px
