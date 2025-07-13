@@ -49,6 +49,7 @@ function setMode(selectedMode) {
   
   // Clear any existing feedback and input
   clearFeedback();
+  clearLastWord();
   document.getElementById('answer').value = '';
   
   // Show first word in the selected mode
@@ -75,6 +76,10 @@ function nextWord() {
   
   // Select random word from the current mode's word list
   currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+  
+  // Debug log to verify correct mode
+  console.log('Current mode:', mode, 'Selected word:', currentWord);
+  
   const wordElement = document.getElementById('word');
   wordElement.textContent = currentWord.kana;
   
@@ -117,14 +122,11 @@ function checkAnswer() {
   const correctMeaning = currentWord.meaning.toLowerCase();
   
   if (userInput === correctRomaji || userInput === correctMeaning) {
-    feedbackElement.innerHTML = `
-      <div>✅ Correct!</div>
-      <div style="font-size: 0.9em; margin-top: 0.5em;">
-        <strong>Romaji:</strong> ${currentWord.romaji}<br>
-        <strong>Meaning:</strong> ${currentWord.meaning}
-      </div>
-    `;
+    feedbackElement.innerHTML = `<div>✅ Correct!</div>`;
     feedbackElement.className = 'correct';
+    
+    // Update last word section
+    updateLastWordSection(currentWord);
     
     // Update stats
     stats.correct++;
@@ -182,6 +184,20 @@ function clearFeedback() {
   feedbackElement.className = '';
 }
 
+function updateLastWordSection(word) {
+  const lastWordInfo = document.getElementById('last-word-info');
+  lastWordInfo.innerHTML = `
+    <span class="kana">${word.kana}</span> → 
+    <span class="romaji">${word.romaji}</span> → 
+    <span class="meaning">${word.meaning}</span>
+  `;
+}
+
+function clearLastWord() {
+  const lastWordInfo = document.getElementById('last-word-info');
+  lastWordInfo.innerHTML = '';
+}
+
 function resetStats() {
   stats = {
     correct: 0,
@@ -227,6 +243,10 @@ document.addEventListener('DOMContentLoaded', function() {
       // Small delay to show the complete word before auto-advancing
       setTimeout(() => {
         showCorrectFeedback();
+        
+        // Update last word section
+        updateLastWordSection(currentWord);
+        
         stats.correct++;
         stats.streak++;
         if (stats.streak > stats.bestStreak) {
@@ -237,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto-advance to next word in the same mode
         setTimeout(() => {
           nextWord();
-        }, 1000);
+        }, 100);
       }, 200);
     }
   });
@@ -248,17 +268,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function showCorrectFeedback() {
   const feedbackElement = document.getElementById('feedback');
-  feedbackElement.innerHTML = `
-    <div>✅ Correct! Auto-advancing...</div>
-    <div style="font-size: 0.9em; margin-top: 0.5em;">
-      <strong>Romaji:</strong> ${currentWord.romaji}<br>
-      <strong>Meaning:</strong> ${currentWord.meaning}
-    </div>
-  `;
+  feedbackElement.innerHTML = `<div>✅ Correct! Auto-advancing...</div>`;
   feedbackElement.className = 'correct';
 }
 
 // Initialize when page loads
 window.onload = () => {
-  // Mode will be set once words are loaded
+  // Ensure hiragana mode is selected by default once words are loaded
+  if (wordsData && wordsData.hiraganaWords) {
+    setMode('hiragana');
+  }
 };

@@ -108,6 +108,45 @@ input[type="text"]:focus {
   background: rgba(255, 255, 255, 0.15);
 }
 
+.last-word-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1em;
+  margin: 1em 0;
+  min-height: 2em;
+  transition: all 0.3s ease;
+}
+
+.last-word-label {
+  font-size: 0.9em;
+  color: #9ca3af;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+}
+
+#last-word-info {
+  font-size: 1em;
+  color: #e0e0e0;
+  line-height: 1.4;
+}
+
+#last-word-info .kana {
+  color: #fbbf24;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+#last-word-info .romaji {
+  color: #64b5f6;
+  font-weight: 500;
+}
+
+#last-word-info .meaning {
+  color: #10b981;
+  font-weight: 500;
+}
+
 .check-button {
   background: linear-gradient(145deg, #059669, #047857);
   color: white;
