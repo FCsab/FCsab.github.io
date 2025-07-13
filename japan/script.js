@@ -5,8 +5,13 @@ let stats = {
   correct: 0,
   incorrect: 0,
   streak: 0,
-  bestStreak: 0
+  bestStreak: 0,
+  totalTypingTime: 0,
+  totalCharacters: 0
 };
+let wordStartTime = null;
+let recentlyAskedWords = []; // Track recently asked words
+const HISTORY_SIZE = 100; // Don't repeat words for 100 words
 
 // Load words data from JSON
 fetch('japan/words.json')
@@ -47,6 +52,9 @@ function setMode(selectedMode) {
   // Reset stats for new mode
   resetStats();
   
+  // Clear recently asked words when switching modes
+  recentlyAskedWords = [];
+  
   // Clear any existing feedback and input
   clearFeedback();
   clearLastWord();
@@ -59,6 +67,36 @@ function setMode(selectedMode) {
   document.getElementById('answer').focus();
 }
 
+function isHiragana(char) {
+  return char >= '\u3040' && char <= '\u309F';
+}
+
+function isKatakana(char) {
+  return char >= '\u30A0' && char <= '\u30FF';
+}
+
+function isPureHiragana(text) {
+  for (let char of text) {
+    if (char >= '\u3040' && char <= '\u30FF') { // Japanese characters
+      if (!isHiragana(char)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function isPureKatakana(text) {
+  for (let char of text) {
+    if (char >= '\u3040' && char <= '\u30FF') { // Japanese characters
+      if (!isKatakana(char)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 function nextWord() {
   // Always use the currently selected mode
   if (!wordsData || !wordsData[mode + 'Words']) {
@@ -67,26 +105,86 @@ function nextWord() {
   }
   
   // Get words only from the current mode
-  const wordList = wordsData[mode + 'Words'];
+  let wordList = wordsData[mode + 'Words'];
   
   if (!wordList || wordList.length === 0) {
     console.error('No words available for mode:', mode);
     return;
   }
   
-  // Select random word from the current mode's word list
-  currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+  // Filter words to ensure they match the selected script
+  if (mode === 'hiragana') {
+    wordList = wordList.filter(word => isPureHiragana(word.kana));
+  } else if (mode === 'katakana') {
+    wordList = wordList.filter(word => isPureKatakana(word.kana));
+  }
   
-  // Debug log to verify correct mode
-  console.log('Current mode:', mode, 'Selected word:', currentWord);
+  if (wordList.length === 0) {
+    console.error('No pure', mode, 'words available');
+    return;
+  }
+  
+  // Filter out recently asked words
+  let availableWords = wordList.filter(word => 
+    !recentlyAskedWords.some(recentWord => recentWord.kana === word.kana)
+  );
+  
+  // If all words have been recently asked, use the full list
+  if (availableWords.length === 0) {
+    console.log('All words recently asked, resetting history');
+    recentlyAskedWords = [];
+    availableWords = wordList;
+  }
+  
+  // Select random word from the available words
+  currentWord = availableWords[Math.floor(Math.random() * availableWords.length)];
+  
+  // Add to recently asked words
+  recentlyAskedWords.push(currentWord);
+  
+  // Keep only the last HISTORY_SIZE words
+  if (recentlyAskedWords.length > HISTORY_SIZE) {
+    recentlyAskedWords.shift(); // Remove the oldest word
+  }
+  
+  // Debug log to verify correct mode and history
+  console.log('Current mode:', mode, 'Selected word:', currentWord.kana, 'History size:', recentlyAskedWords.length);
   
   const wordElement = document.getElementById('word');
   wordElement.textContent = currentWord.kana;
   
-  // Add hover functionality to show answer
+  // Start timing when new word is shown
+  wordStartTime = Date.now();
+  
+  // Track if word is currently revealed
+  let isRevealed = false;
+  
+  // Add hover functionality for desktop
   wordElement.onmouseenter = function() {
-    this.setAttribute('data-original', this.textContent);
-    this.innerHTML = `
+    if (!isRevealed) {
+      showAnswer();
+    }
+  };
+  
+  wordElement.onmouseleave = function() {
+    if (!isRevealed) {
+      hideAnswer();
+    }
+  };
+  
+  // Add click functionality for mobile
+  wordElement.onclick = function() {
+    if (isRevealed) {
+      hideAnswer();
+      isRevealed = false;
+    } else {
+      showAnswer();
+      isRevealed = true;
+    }
+  };
+  
+  function showAnswer() {
+    wordElement.innerHTML = `
       <div style="font-size: 0.6em; color: #64b5f6; margin-bottom: 0.5em;">
         Romaji: ${currentWord.romaji}
       </div>
@@ -94,18 +192,28 @@ function nextWord() {
         Meaning: ${currentWord.meaning}
       </div>
     `;
-    this.style.fontSize = '2em';
-  };
+  }
   
-  wordElement.onmouseleave = function() {
-    this.textContent = this.getAttribute('data-original');
-    this.style.fontSize = '3.5em';
-  };
+  function hideAnswer() {
+    wordElement.textContent = currentWord.kana;
+  }
   
   // Clear previous feedback and input
   clearFeedback();
   document.getElementById('answer').value = '';
   document.getElementById('answer').focus();
+}
+
+function calculateTypingTime(userInput) {
+  if (wordStartTime) {
+    const typingTime = Date.now() - wordStartTime;
+    const characterCount = userInput.length;
+    
+    stats.totalTypingTime += typingTime;
+    stats.totalCharacters += characterCount;
+    
+    wordStartTime = null; // Reset for next word
+  }
 }
 
 function checkAnswer() {
@@ -124,6 +232,9 @@ function checkAnswer() {
   if (userInput === correctRomaji || userInput === correctMeaning) {
     feedbackElement.innerHTML = `<div>✅ Correct!</div>`;
     feedbackElement.className = 'correct';
+    
+    // Calculate typing time
+    calculateTypingTime(userInput);
     
     // Update last word section
     updateLastWordSection(currentWord);
@@ -153,6 +264,9 @@ function checkAnswer() {
     // Update stats
     stats.incorrect++;
     stats.streak = 0;
+    
+    // Reset timing for incorrect answers
+    wordStartTime = null;
   }
   
   updateStatsDisplay();
@@ -203,8 +317,11 @@ function resetStats() {
     correct: 0,
     incorrect: 0,
     streak: 0,
-    bestStreak: 0
+    bestStreak: 0,
+    totalTypingTime: 0,
+    totalCharacters: 0
   };
+  // Don't reset recentlyAskedWords here since user might want to continue without repeats
   updateStatsDisplay();
 }
 
@@ -218,6 +335,12 @@ function updateStatsDisplay() {
     ? Math.round((stats.correct / (stats.correct + stats.incorrect)) * 100) 
     : 0;
   document.getElementById('accuracy').textContent = accuracy + '%';
+  
+  // Calculate average time per character
+  const avgTimePerChar = stats.totalCharacters > 0 
+    ? Math.round(stats.totalTypingTime / stats.totalCharacters)
+    : 0;
+  document.getElementById('avg-time').textContent = avgTimePerChar + 'ms';
 }
 
 // Handle Enter key press and real-time checking
@@ -243,6 +366,9 @@ document.addEventListener('DOMContentLoaded', function() {
       // Small delay to show the complete word before auto-advancing
       setTimeout(() => {
         showCorrectFeedback();
+        
+        // Calculate typing time
+        calculateTypingTime(userInput);
         
         // Update last word section
         updateLastWordSection(currentWord);
