@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Japanese Kana Learning Tool - N5/N4 Level</title>
+  <link rel="stylesheet" href="japan/styles.css">
+</head>
+<body>
+  <h1>🇯🇵 Japanese Kana Practice</h1>
+  <p style="color: #9ca3af; margin-bottom: 2em;">Learn Hiragana & Katakana with N5/N4 Level Words</p>
+  
+  <div class="mode-selector">
+    <button onclick="setMode('hiragana')">ひらがな Hiragana</button>
+    <button onclick="setMode('katakana')">カタカナ Katakana</button>
+  </div>
+
+  <div id="quiz-section">
+    <div id="word">Loading...</div>
+    
+    <div class="input-section">
+      <input type="text" id="answer" placeholder="Type romaji reading or English meaning" autocomplete="off">
+    </div>
+    
+    <div id="last-word-section" class="last-word-section">
+      <div class="last-word-label">Last Word:</div>
+      <div id="last-word-info"></div>
+    </div>
+    
+    <div class="action-buttons">
+      <button class="check-button" onclick="checkAnswer()">✓ Check Answer</button>
+      <button class="next-button" onclick="nextWord()">→ Next Word</button>
+      <button class="next-button" onclick="skipWord()">⏭ Skip</button>
+    </div>
+    
+    <div id="feedback"></div>
+    
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-number" id="correct-count">0</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="incorrect-count">0</div>
+        <div class="stat-label">Incorrect</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="accuracy">0%</div>
+        <div class="stat-label">Accuracy</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="current-streak">0</div>
+        <div class="stat-label">Current Streak</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="best-streak">0</div>
+        <div class="stat-label">Best Streak</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="avg-time">0ms</div>
+        <div class="stat-label">Avg Time/Char</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 3em; color: #6b7280; font-size: 0.9em;">
+    <p>💡 <strong>Tips:</strong></p>
+    <ul style="text-align: left; max-width: 500px; margin: 0 auto;">
+      <li>Type romaji reading or English meaning - answers are accepted automatically!</li>
+      <li>Hover over the Japanese word to see the answer (or tap on mobile)</li>
+      <li>Press Enter to check your answer manually</li>
+      <li>Use the Skip button if you're unsure</li>
+      <li>Words won't repeat for the next 100 words to ensure variety</li>
+      <li>Practice both hiragana and katakana modes regularly</li>
+    </ul>
+  </div>
+
+  <script src="japan/script.js"></script>
+</body>
+</html>
