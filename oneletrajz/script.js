@@ -25,7 +25,7 @@ const langData = {
       design: 'MOTIVÁCIÓ ÉS CÉLOK: SZAKMAI TAPASZTALATSZERZÉS ÉS TUDÁS GYAKORLATI ALKALMAZÁSA',
       webDesign: 'CSAPATMUNKA: MAGABIZTOS TELJESÍTMÉNY EGYÉNI ÉS CSOPORTOS PROJEKTEKBEN',
       branding: 'SZABADIDŐS TEVÉKENYSÉGEK: PROGRAMOZÁSI PROJEKTEK ÉS ROBOTIKAI KÍSÉRLETEK',
-      designAnimation: 'DESIGN ANIMÁCIÓK: ALAP SZINTŰ ISMERETEK'
+      designAnimation: ''
    },
    en: {
       loadingH1: '<span><i class="fa fa-cogs"></i></span> INITIALIZING RESUME SYSTEM<span id="loading">.</span>',
@@ -52,7 +52,7 @@ const langData = {
       design: 'MOTIVATION & GOALS: GAINING PROFESSIONAL EXPERIENCE & PRACTICAL APPLICATION OF KNOWLEDGE',
       webDesign: 'TEAMWORK: CONFIDENT PERFORMANCE IN INDIVIDUAL AND GROUP PROJECTS',
       branding: 'LEISURE ACTIVITIES: PROGRAMMING PROJECTS & ROBOTICS EXPERIMENTS',
-      designAnimation: 'DESIGN ANIMATIONS: BASIC KNOWLEDGE'
+      designAnimation: ''
    }
 };
 
