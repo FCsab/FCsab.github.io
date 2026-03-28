@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheatsheet Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="page">
+        <header class="header">
+            <span class="kicker">Quick Reference</span>
+            <h1>Cheatsheet Hub</h1>
+            <p class="subtitle">Four focused sections stacked vertically, each with a card column that can grow as long as you need for bigger syntax notes.</p>
+        </header>
+
+        <section class="section-stack">
+            <section class="sheet-column" aria-label="HTML section">
+                <div class="section-head">
+                    <h2 class="section-title">Program.cs</h2>
+                    <span class="section-tag">Markup</span>
+                </div>
+                <div class="cards">
+                    <article class="card">
+                        <h3>ASP.NET Core Setup</h3>
+                        <p>Starter Program.cs example with PostgreSQL, CORS, controllers, and Swagger using variable naming.</p>
+                    </article>
+                    <article class="card">
+                        <h3>Program.cs Snippet</h3>
+                        <pre class="syntax">using Microsoft.EntityFrameworkCore;
+using variableapi.Model;
+using variableapi.Persistence;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddDbContext&lt;VariableDbContext&gt;(options =&gt;
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("variabledb"));
+});
+builder.Services.AddTransient&lt;VariableModel&gt;();
+
+builder.Services.AddCors(options =&gt;
+{
+    options.AddPolicy("AllowFrontend",
+        policy =&gt;
+        {
+            policy
+                .WithOrigins("http://localhost")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
+builder.Services.AddControllers();
+
+var app = builder.Build();
+
+app.MapControllers();
+
+app.UseCors("AllowFrontend");
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+//app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.Run();</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Connection Key</h3>
+                        <p>Make sure appsettings.json has a <span class="kbd">ConnectionStrings:variabledb</span> entry to match the snippet.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="sheet-column" aria-label="CSS section">
+                <div class="section-head">
+                    <h2 class="section-title">VariableModel Ops</h2>
+                    <span class="section-tag">CRUD</span>
+                </div>
+                <div class="cards">
+                    <article class="card">
+                        <h3>Model Base</h3>
+                        <pre class="syntax">using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
+using variableapi.Persistence;
+
+namespace variableapi.Model;
+
+public class VariableModel
+{
+    private readonly VariableDbContext _dbContext;
+
+    public VariableModel(VariableDbContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get All Variables</h3>
+                        <pre class="syntax">public IEnumerable&lt;GetAllVariablesDto&gt; GetAllVariables()
+{
+    return _dbContext.variables.Select(x =&gt; new GetAllVariablesDto
+    {
+        VariableId = x.variableId,
+        Title = x.title,
+        Director = x.director,
+        ReleaseYear = x.releaseYear,
+        GroupId = x.groupId,
+        GroupName = _dbContext.groups.Where(y =&gt; y.groupId == x.groupId).Select(y =&gt; y.name).First()
+    });
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get Variable By Id</h3>
+                        <pre class="syntax">public IEnumerable&lt;GetVariableByIdDto&gt; GetVariableById(int id)
+{
+    var data = _dbContext.variables.Where(x =&gt; x.variableId == id);
+    if (data == null)
+    {
+        throw new KeyNotFoundException();
+    }
+    else
+    {
+        return data.Select(x =&gt; new GetVariableByIdDto
+            {
+                Title = x.title,
+                Director = x.director,
+                ReleaseYear = x.releaseYear,
+                GroupId = x.groupId,
+                GroupName = _dbContext.groups.Where(y =&gt; y.groupId == x.groupId).Select(y =&gt; y.name).First()
+            }
+        );
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Create New Variable</h3>
+                        <pre class="syntax">public async Task CreateNewVariable(NewVariableDto data)
+{
+    if (data.ReleaseYear &lt; 1800)
+    {
+        throw new ArgumentOutOfRangeException();
+    }
+    else if (!_dbContext.groups.Select(x =&gt; x.name).ToList().Contains(data.GroupName))
+    {
+        throw new KeyNotFoundException();
+    }
+
+    using var trx = _dbContext.Database.BeginTransaction();
+    {
+        _dbContext.Add(new VariableDbContext.Variable
+        {
+            title = data.Title,
+            director = data.Director,
+            releaseYear = data.ReleaseYear,
+            groupId = _dbContext.groups.Where(x =&gt; x.name == data.GroupName).First().groupId,
+        });
+        _dbContext.SaveChanges();
+        trx.Commit();
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Update Variable</h3>
+                        <pre class="syntax">public async Task UpdateVariable(UpdateVariableDto data)
+{
+    var updated = _dbContext.variables.Where(x =&gt; x.variableId == data.variableId).First();
+    if (updated == null)
+    {
+        throw new KeyNotFoundException();
+    }
+    else if (data.groupId == null || data.Title == null || data.releaseYear == null || data.groupId == null)
+    {
+        throw new DataException();
+    }
+    else
+    {
+        using var trx = _dbContext.Database.BeginTransaction();
+        {
+            updated.title = data.Title;
+            updated.director = data.Director;
+            updated.releaseYear = data.releaseYear;
+            updated.groupId = data.groupId;
+        }
+        _dbContext.SaveChanges();
+        trx.Commit();
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Delete Variable</h3>
+                        <pre class="syntax">public async Task DeleteVariable(int id)
+{
+    if (id &lt; 0)
+    {
+        throw new ArgumentOutOfRangeException();
+    }
+    else
+    {
+        var todelete = _dbContext.variables.Where(x =&gt; x.variableId == id).First();
+        if (todelete == null)
+        {
+            throw new KeyNotFoundException();
+        }
+        else
+        {
+            using var trx = _dbContext.Database.BeginTransaction();
+            {
+                _dbContext.variables.Remove(todelete);
+                _dbContext.SaveChanges();
+                trx.Commit();
+            }
+        }
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get All Groups</h3>
+                        <pre class="syntax">public IEnumerable&lt;GetAllGroupsDto&gt; GetAllGroups()
+{
+    return _dbContext.groups.Select(x =&gt; new GetAllGroupsDto
+    {
+        GroupId = x.groupId,
+        Name = x.name,
+        yearLimit = x.ageLimit,
+        numberOfVariables = _dbContext.variables.Where(y =&gt; y.groupId == x.groupId).Count()
+    });
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Create Group</h3>
+                        <pre class="syntax">public async Task CreateGroup(CreateGroupDto data)
+{
+    if (data.name == null || data.ageLimit == null)
+    {
+        throw new DataException();
+    }
+    else
+    {
+        VariableDbContext.Group newGroup = new VariableDbContext.Group
+        {
+            ageLimit = data.ageLimit,
+            name = data.name
+        };
+        using var trx = _dbContext.Database.BeginTransaction();
+        {
+            _dbContext.groups.Add(newGroup);
+            _dbContext.SaveChanges();
+            trx.Commit();
+        }
+    }
+}</pre>
+                    </article>
+                </div>
+            </section>
+
+            <section class="sheet-column" aria-label="JavaScript section">
+                <div class="section-head">
+                    <h2 class="section-title">Variable Controller Ops</h2>
+                    <span class="section-tag">Endpoints</span>
+                </div>
+                <div class="cards">
+                    <article class="card">
+                        <h3>Variable API Controller Base</h3>
+                        <pre class="syntax">using System.Data;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using variableapi.Model;
+using variableapi.Persistence;
+
+namespace variableapi.Controller
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class api : ControllerBase
+    {
+        private readonly VariableModel _variableModel;
+
+        public api(VariableModel variableModel)
+        {
+            _variableModel = variableModel;
+        }
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get All Variables</h3>
+                        <pre class="syntax">[HttpGet("allvariables")]
+public ActionResult&lt;IEnumerable&lt;GetAllVariablesDto&gt;&gt; GetAllVariables()
+{
+    try
+    {
+        return Ok(_variableModel.GetAllVariables());
+    }
+    catch (Exception e)
+    {
+        return BadRequest(e.Message);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get Variable By Id</h3>
+                        <pre class="syntax">[HttpGet("variable")]
+public ActionResult&lt;IEnumerable&lt;GetVariableByIdDto&gt;&gt; GetVariableById([FromQuery] int id)
+{
+    try
+    {
+        return Ok(_variableModel.GetVariableById(id));
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Create Variable</h3>
+                        <pre class="syntax">[HttpPost("variable")]
+public async Task&lt;ActionResult&gt; CreateVariable([FromBody] NewVariableDto data)
+{
+    try
+    {
+        return Ok(_variableModel.CreateNewVariable(data));
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        return BadRequest(ex.Message);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Update Variable</h3>
+                        <pre class="syntax">[HttpPut("variable")]
+public async Task&lt;ActionResult&gt; UpdateVariable([FromBody] UpdateVariableDto data)
+{
+    try
+    {
+        return Ok(_variableModel.UpdateVariable(data));
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+    catch (DataException ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Delete Variable</h3>
+                        <pre class="syntax">[HttpDelete("variable")]
+public async Task&lt;ActionResult&gt; DeleteVariable([FromQuery] int id)
+{
+    try
+    {
+        return Ok(_variableModel.DeleteVariable(id));
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(ex.Message);
+    }
+    catch (ArgumentOutOfRangeException ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Get All Groups</h3>
+                        <pre class="syntax">[HttpGet("groups")]
+public ActionResult&lt;IEnumerable&lt;GetAllGroupsDto&gt;&gt; GetAllGroups()
+{
+    try
+    {
+        return Ok(_variableModel.GetAllGroups());
+    }
+    catch (Exception e)
+    {
+        return BadRequest(e.InnerException);
+    }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Create Group</h3>
+                        <pre class="syntax">[HttpPost("addgroup")]
+public async Task&lt;ActionResult&gt; CreateGroup(CreateGroupDto data)
+{
+    try
+    {
+        return Ok(_variableModel.CreateGroup(data));
+    }
+    catch (DataException ex)
+    {
+        return BadRequest(ex.Message);
+    }
+}</pre>
+                    </article>
+                </div>
+            </section>
+
+            <section class="sheet-column" aria-label="Tools section">
+                <div class="section-head">
+                    <h2 class="section-title">Variable Persistence</h2>
+                    <span class="section-tag">DbContext</span>
+                </div>
+                <div class="cards">
+                    <article class="card">
+                        <h3>Persistence Imports</h3>
+                        <pre class="syntax">using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+
+namespace variableapi.Persistence;</pre>
+                    </article>
+                    <article class="card">
+                        <h3>VariableDbContext</h3>
+                        <pre class="syntax">public class VariableDbContext : DbContext
+{
+    public DbSet&lt;Variable&gt; variables { get; set; }
+    public DbSet&lt;Group&gt; groups { get; set; }
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>DbContext Constructor</h3>
+                        <pre class="syntax">public VariableDbContext(DbContextOptions&lt;VariableDbContext&gt; options) : base(options)
+{
+}</pre>
+                    </article>
+                    <article class="card">
+                        <h3>Variable Entity</h3>
+                        <pre class="syntax">public class Variable
+{
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int variableId { get; set; }
+    public string title { get; set; }
+    public string director { get; set; }
+    public int releaseYear { get; set; }
+    public int groupId { get; set; }
+}</pre>
+                    </article>
+                </div>
+            </section>
+        </section>
+    </main>
+</body>
+</html>
