@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crypto Ticker</title>
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --card: #111820;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #2ea043;
+      --red: #da3633;
+      --yellow: #d29922;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+    .container {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .header .source { color: var(--yellow); font-weight: 600; }
+    .header .time { color: var(--muted); }
+    .header .status { color: var(--muted); }
+    .coin-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 6px;
+      border-bottom: 1px solid #1c242d;
+    }
+    .coin-row:last-child { border-bottom: none; }
+    .coin-name {
+      width: 48px;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--text);
+    }
+    .coin-price {
+      font-family: ui-monospace, SFMono, Consolas, monospace;
+      font-size: 15px;
+      color: var(--text);
+      text-align: right;
+      flex: 1;
+      margin-left: 8px;
+    }
+    .coin-pct {
+      width: 80px;
+      text-align: right;
+      font-weight: 600;
+      font-size: 14px;
+      margin-left: 8px;
+    }
+    .coin-pct.pos { color: var(--green); }
+    .coin-pct.neg { color: var(--red); }
+    .error {
+      text-align: center;
+      color: var(--red);
+      font-weight: 600;
+      padding: 16px;
+      display: none;
+    }
+    .error.show { display: block; }
+    .footer {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="source">BINANCE USD</div>
+      <div class="time" id="time">--:--</div>
+      <div class="status" id="status">Bet&#246;lt&#233;s...</div>
+    </div>
+    <div id="coins"></div>
+    <div class="error" id="error">Hiba az adatok bet&#246;lt&#233;sekor</div>
+    <div class="footer">Friss&#237;t&#233;s: 5 percenk&#233;nt</div>
+  </div>
+
+  <script>
+    const COINS = [
+      { pair: "BTCUSDT", name: "BTC" },
+      { pair: "ETHUSDT", name: "ETH" },
+      { pair: "BNBUSDT", name: "BNB" },
+      { pair: "SOLUSDT", name: "SOL" },
+      { pair: "XRPUSDT", name: "XRP" },
+      { pair: "LTCUSDT", name: "LTC" },
+    ];
+
+    const symbols = COINS.map(c => `"${c.pair}"`).join(",");
+    const URL = `https://api.binance.com/api/v3/ticker/24hr?symbols=[${symbols}]`;
+
+    function fmtPrice(p) {
+      if (p >= 10000) return p.toFixed(0);
+      if (p >= 100) return p.toFixed(1);
+      if (p >= 1) return p.toFixed(2);
+      return p.toFixed(4);
+    }
+
+    function updateTime() {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, "0");
+      const mm = String(now.getMinutes()).padStart(2, "0");
+      document.getElementById("time").textContent = `${hh}:${mm}`;
+    }
+
+    async function fetchPrices() {
+      const statusEl = document.getElementById("status");
+      const errorEl = document.getElementById("error");
+      const coinsEl = document.getElementById("coins");
+
+      try {
+        const res = await fetch(URL);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+
+        const map = {};
+        for (const item of data) {
+          map[item.symbol] = {
+            price: parseFloat(item.lastPrice),
+            pct: parseFloat(item.priceChangePercent)
+          };
+        }
+
+        coinsEl.innerHTML = "";
+        let any = false;
+
+        for (const c of COINS) {
+          const row = document.createElement("div");
+          row.className = "coin-row";
+
+          const name = document.createElement("div");
+          name.className = "coin-name";
+          name.textContent = c.name;
+
+          const price = document.createElement("div");
+          price.className = "coin-price";
+
+          const pct = document.createElement("div");
+          pct.className = "coin-pct";
+
+          if (map[c.pair]) {
+            any = true;
+            price.textContent = fmtPrice(map[c.pair].price);
+            const sign = map[c.pair].pct >= 0 ? "+" : "";
+            pct.textContent = `${sign}${map[c.pair].pct.toFixed(2)}%`;
+            pct.classList.add(map[c.pair].pct >= 0 ? "pos" : "neg");
+          } else {
+            price.textContent = "nincs adat";
+            pct.textContent = "";
+            price.style.color = "var(--muted)";
+          }
+
+          row.appendChild(name);
+          row.appendChild(price);
+          row.appendChild(pct);
+          coinsEl.appendChild(row);
+        }
+
+        statusEl.textContent = any ? "Friss&#237;tve" : "Nincs adat";
+        statusEl.style.color = any ? "var(--green)" : "var(--muted)";
+        errorEl.classList.remove("show");
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = "Hiba";
+        statusEl.style.color = "var(--red)";
+        errorEl.classList.add("show");
+      }
+    }
+
+    updateTime();
+    fetchPrices();
+    setInterval(() => { updateTime(); }, 10000);
+    setInterval(() => { fetchPrices(); }, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
