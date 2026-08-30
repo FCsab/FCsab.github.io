@@ -14,6 +14,8 @@
       --red: #da3633;
       --yellow: #d29922;
       --border: #30363d;
+      --buy-bg: rgba(46, 160, 67, 0.12);
+      --buy-border: #2ea043;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -53,8 +55,13 @@
       align-items: center;
       padding: 10px 6px;
       border-bottom: 1px solid #1c242d;
+      border-radius: 6px;
     }
     .coin-row:last-child { border-bottom: none; }
+    .coin-row.buy {
+      background: var(--buy-bg);
+      border: 1px solid var(--buy-border);
+    }
     .coin-name {
       width: 48px;
       font-weight: 700;
@@ -107,6 +114,16 @@
   </div>
 
   <script>
+    // VASARLASI SZINTEK (24h eses %)
+    const BUY_LEVELS = {
+      "BTC": -7.5,
+      "ETH": -10,
+      "BNB": -9,
+      "SOL": -15,
+      "XRP": -14,
+      "LTC": -10,
+    };
+
     const COINS = [
       { pair: "BTCUSDT", name: "BTC" },
       { pair: "ETHUSDT", name: "ETH" },
@@ -174,6 +191,13 @@
             const sign = map[c.pair].pct >= 0 ? "+" : "";
             pct.textContent = `${sign}${map[c.pair].pct.toFixed(2)}%`;
             pct.classList.add(map[c.pair].pct >= 0 ? "pos" : "neg");
+
+            // VASARLASI JELZES
+            const level = BUY_LEVELS[c.name];
+            if (level !== undefined && map[c.pair].pct <= level) {
+              row.classList.add("buy");
+              name.textContent = c.name + " \u2713";  // pipa a nev mellett
+            }
           } else {
             price.textContent = "nincs adat";
             pct.textContent = "";
@@ -186,7 +210,7 @@
           coinsEl.appendChild(row);
         }
 
-        statusEl.textContent = any ? "Friss&#237;tve" : "Nincs adat";
+        statusEl.textContent = any ? "Friss\u00edtve" : "Nincs adat";
         statusEl.style.color = any ? "var(--green)" : "var(--muted)";
         errorEl.classList.remove("show");
       } catch (e) {
