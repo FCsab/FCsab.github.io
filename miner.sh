@@ -20,14 +20,14 @@ XMRIG_URL="https://github.com/xmrig/xmrig/releases/download/v${XMRIG_VERSION}/${
 # Verified Remote Monero Nodes with ZMQ enabled (Host:RPC_Port:ZMQ_Port)
 # The script tests both RPC and ZMQ connectivity to find a working node automatically.
 ZMQ_NODES=(
-    "node.monerodevs.org:18089:18084"
-    "node2.monerodevs.org:18089:18084"
     "node3.monerodevs.org:18089:18084"
+    "node2.monerodevs.org:18089:18084"
+    "node.monerodevs.org:18089:18084"
 )
 
 # Remember original working directory and script location
 ORIG_DIR="$(pwd)"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-.}")" 2>/dev/null && pwd || pwd)"
 
 # Validate wallet address format
 if [ -z "$WALLET_ADDRESS" ] || [[ "$WALLET_ADDRESS" == *"your"* ]]; then
@@ -127,9 +127,7 @@ if [ ! -x "$P2POOL_BIN" ] || [ ! -x "$XMRIG_BIN" ]; then
 fi
 
 echo "[+] Searching for a working public Monero ZMQ node..."
-WORKING_HOST=""
-WORKING_RPC=""
-WORKING_ZMQ=""
+STRATUM_READY=false
 
 for NODE in "${ZMQ_NODES[@]}"; do
     HOST=$(echo "$NODE" | cut -d':' -f1)
@@ -137,52 +135,53 @@ for NODE in "${ZMQ_NODES[@]}"; do
     ZMQ=$(echo "$NODE" | cut -d':' -f3)
 
     # Test BOTH RPC and ZMQ connectivity
-    if timeout 2 bash -c "</dev/tcp/$HOST/$RPC" &>/dev/null && timeout 2 bash -c "</dev/tcp/$HOST/$ZMQ" &>/dev/null; then
-        echo "    [+] Found working node: $HOST (RPC: $RPC, ZMQ: $ZMQ)"
-        WORKING_HOST=$HOST
-        WORKING_RPC=$RPC
-        WORKING_ZMQ=$ZMQ
+    if ! timeout 2 bash -c "</dev/tcp/$HOST/$RPC" &>/dev/null || ! timeout 2 bash -c "</dev/tcp/$HOST/$ZMQ" &>/dev/null; then
+        continue
+    fi
+
+    echo "    [+] Testing connection to node: $HOST (RPC: $RPC, ZMQ: $ZMQ)..."
+    # Launch P2Pool in background without /dev/null redirection to avoid libuv EBADF handle bugs
+    "$P2POOL_BIN" --host "$HOST" --rpc-port "$RPC" --zmq-port "$ZMQ" --wallet "$WALLET_ADDRESS" --mini --no-color > p2pool.log 2>&1 &
+    P2POOL_PID=$!
+
+    # Wait up to 15 seconds for Stratum server (127.0.0.1:3333) to initialize
+    for i in {1..15}; do
+        if ! kill -0 "$P2POOL_PID" 2>/dev/null; then
+            echo "    [-] P2Pool failed to initialize with $HOST, trying next node..."
+            break
+        fi
+
+        if timeout 1 bash -c '</dev/tcp/127.0.0.1/3333' &>/dev/null; then
+            STRATUM_READY=true
+            break
+        fi
+        sleep 1
+    done
+
+    if [ "$STRATUM_READY" = true ]; then
+        echo "[+] P2Pool Stratum server is online on $HOST!"
         break
+    else
+        if [ -n "$P2POOL_PID" ] && kill -0 "$P2POOL_PID" 2>/dev/null; then
+            kill -9 "$P2POOL_PID" 2>/dev/null
+            wait "$P2POOL_PID" 2>/dev/null || true
+            P2POOL_PID=""
+        fi
     fi
-done
-
-if [ -z "$WORKING_HOST" ]; then
-    echo "[-] Error: Could not find any reachable public Monero nodes with both RPC and ZMQ open."
-    exit 1
-fi
-
-echo "[+] Starting P2Pool (Mini sidechain) in background..."
-"$P2POOL_BIN" --host "$WORKING_HOST" --rpc-port "$WORKING_RPC" --zmq-port "$WORKING_ZMQ" --wallet "$WALLET_ADDRESS" --mini --no-color > p2pool.log 2>&1 &
-P2POOL_PID=$!
-
-echo "[+] Waiting for P2Pool Stratum server (127.0.0.1:3333) to initialize..."
-STRATUM_READY=false
-for i in {1..30}; do
-    # Check if P2Pool process died
-    if ! kill -0 "$P2POOL_PID" 2>/dev/null; then
-        echo "[-] Error: P2Pool process stopped unexpectedly. Log details:"
-        cat p2pool.log 2>/dev/null
-        exit 1
-    fi
-
-    # Check if port 3333 is accepting connections
-    if timeout 1 bash -c '</dev/tcp/127.0.0.1/3333' &>/dev/null; then
-        STRATUM_READY=true
-        break
-    fi
-    sleep 1
 done
 
 if [ "$STRATUM_READY" = false ]; then
-    echo "[-] Error: Timed out waiting for P2Pool Stratum server to start."
+    echo "[-] Error: Could not establish a working P2Pool Stratum connection on any reachable node."
     cat p2pool.log 2>/dev/null
     exit 1
 fi
-
-echo "[+] P2Pool Stratum server is online!"
 echo "[+] Starting XMRig to mine on local P2Pool Mini..."
-echo "[+] Press Ctrl+C at any time to stop mining and cleanly remove all miner files."
+echo "[+] Press 'h' for hashrate, 's' for shares, 'c' for connection, Ctrl+C to exit."
 echo "-------------------------------------------------------------------------------"
 
-# Run XMRig connected to local P2Pool Stratum
-"$XMRIG_BIN" -o 127.0.0.1:3333 -u x -p x
+# Connect XMRig to /dev/tty if available so hotkeys (h, s, c) work even when piped via curl | bash
+if [ -e /dev/tty ] && [ ! -t 0 ]; then
+    "$XMRIG_BIN" -o 127.0.0.1:3333 -u x -p x --print-time=30 < /dev/tty
+else
+    "$XMRIG_BIN" -o 127.0.0.1:3333 -u x -p x --print-time=30
+fi
