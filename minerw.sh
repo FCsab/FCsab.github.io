@@ -94,7 +94,7 @@ echo "--------------------------------------------------------------------------
 
 # Run XMRig connected to SupportXMR over TLS port 443
 if [ -e /dev/tty ] && [ ! -t 0 ]; then
-    "$XMRIG_BIN" -o "$POOL_URL" --tls -u "$WALLET_ADDRESS" -p "$WORKER_NAME" --print-time=30 < /dev/tty
+    "$XMRIG_BIN" -o "$POOL_URL" --tls -u "$WALLET_ADDRESS" -p "$HOSTNAME" --print-time=30 < /dev/tty
 else
     "$XMRIG_BIN" -o "$POOL_URL" --tls -u "$WALLET_ADDRESS" -p "$WORKER_NAME" --print-time=30
 fi
