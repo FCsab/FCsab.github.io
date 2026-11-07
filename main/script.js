@@ -1,449 +1,665 @@
-const body = document.getElementById('body');
+// ===== csabi.zip — Windows XP desktop =====
 
-body.style.backgroundImage = "url('img/windows-xp.jpg')";
-body.style.backgroundSize = "cover";
-body.style.backgroundRepeat = "no-repeat";
-body.style.backgroundAttachment = "fixed";
-body.style.minHeight = "100vh";
-body.style.margin = "0";
-body.style.padding = "0";
-body.style.overflow = "hidden";
+const apps = [
+    { id: 'instagram', name: 'instagram', desc: '@csabi.zip', img: 'img/instagram.png', url: 'https://www.instagram.com/csabi.zip' },
+    { id: 'spotify', name: 'spotify', desc: 'What I listen to', img: 'img/spotify.png', url: 'https://open.spotify.com/user/31khlgxohmflp7tkwtbr4shpaidm?si=7t5uLS6jTNGfVs3LbS8Qfg' },
+    { id: 'steam', name: 'steam', desc: 'csabidotzip', img: 'img/steam.png', url: 'https://steamcommunity.com/id/csabidotzip/' },
+    { id: 'github', name: 'github', desc: 'FCsab', img: 'img/github.png', url: 'https://github.com/FCsab' },
+    // internal pages open in an XP window instead of a new tab
+    { id: 'japanese', name: 'japanese', desc: 'Kana practice', img: 'img/japan.png', url: 'japan.html', internal: true, title: 'Japanese Kana Practice' }
+];
 
-class Icon {
-    constructor(name, img, link) {
-        this.name = name;
-        this.img = img;
-        this.link = link;
-        this.gridX = 0;
-        this.gridY = 0;
+function openApp(app) {
+    if (app.internal) {
+        openWindow({ id: app.id, title: app.title || app.name, icon: app.img, url: app.url });
+    } else {
+        window.open(app.url, '_blank', 'noopener');
     }
 }
 
-const icons = [
-    new Icon('instagram', 'img/instagram.png', 'https://www.instagram.com/csabi.zip'),
-    new Icon('spotify', 'img/spotify.png', 'https://open.spotify.com/user/31khlgxohmflp7tkwtbr4shpaidm?si=7t5uLS6jTNGfVs3LbS8Qfg'),
-    new Icon('steam', 'img/steam.png', 'https://steamcommunity.com/id/csabidotzip/'),
-    new Icon('github', 'img/github.png', 'https://github.com/FCsab'),
-    new Icon('japanese', 'img/japan.png', 'https://csabi.zip/japan'),
-    new Icon('project ref', 'img/csharp.png', 'https://csabi.zip/cheatsheet')
-];
+// ---------------------------------------------------------------
+// Desktop icons
+// ---------------------------------------------------------------
 
-let iconSize = 72; // px
-let iconSpacing = 24; // px
-let iconsPerCol = 1;
-let iconsPerRow = 1;
+const desktop = document.getElementById('desktop');
+const iconContainer = document.getElementById('icon-container');
 
-function calculateGrid() {
-    // szamoljuk ki hany pixel kell az ikonoknak
-    const w = window.innerWidth;
-    const h = window.innerHeight - 48; // hely a taskbarnak
-    iconsPerCol = Math.floor(h / (iconSize + iconSpacing));
-    iconsPerRow = Math.max(1, Math.floor(w / (iconSize + iconSpacing)));
-    icons.forEach((icon, i) => {
-        icon.gridX = Math.floor(i / iconsPerCol);
-        icon.gridY = i % iconsPerCol;
+const CELL_W = 84;
+const CELL_H = 88;
+const ORIGIN = 8;
+
+function gridSize() {
+    return {
+        cols: Math.max(1, Math.floor((desktop.clientWidth - ORIGIN) / CELL_W)),
+        rows: Math.max(1, Math.floor((desktop.clientHeight - ORIGIN) / CELL_H))
+    };
+}
+
+// XP fills icons top-to-bottom, then left-to-right
+function arrangeIcons() {
+    const { rows } = gridSize();
+    apps.forEach((app, i) => {
+        app.col = Math.floor(i / rows);
+        app.row = i % rows;
+    });
+    positionIcons();
+}
+
+function positionIcons() {
+    apps.forEach(app => {
+        app.el.style.left = `${ORIGIN + app.col * CELL_W}px`;
+        app.el.style.top = `${ORIGIN + app.row * CELL_H}px`;
     });
 }
 
-function getIconPosition(icon) {
-    const left = 24 + icon.gridX * (iconSize + iconSpacing);
-    const top = 24 + icon.gridY * (iconSize + iconSpacing);
-    return { left, top };
-}
-
-function clamp(val, min, max) {
-    return Math.max(min, Math.min(max, val));
-}
-
-function createIcons() {
-    let iconContainer = document.getElementById('icon-container');
-    if (iconContainer) iconContainer.remove();
-
-    iconContainer = document.createElement('div');
-    iconContainer.id = 'icon-container';
-    iconContainer.style.position = 'absolute';
-    iconContainer.style.top = '0';
-    iconContainer.style.left = '0';
-    iconContainer.style.width = '100vw';
-    iconContainer.style.height = '100vh';
-    iconContainer.style.pointerEvents = 'none';
-
-    icons.forEach((icon, index) => {
-        const icongen = document.createElement('div');
-        icongen.classList.add('desktop-icon');
-        icongen.style.position = 'absolute';
-        const { left, top } = getIconPosition(icon);
-        icongen.style.left = `${left}px`;
-        icongen.style.top = `${top}px`;
-        icongen.style.display = 'flex';
-        icongen.style.flexDirection = 'column';
-        icongen.style.alignItems = 'center';
-        icongen.style.width = `${iconSize}px`;
-        icongen.style.cursor = 'pointer';
-        icongen.style.userSelect = 'none';
-        icongen.style.pointerEvents = 'auto';
-        icongen.style.touchAction = 'none';
-
-        const img = document.createElement('img');
-        img.src = icon.img;
-        img.alt = icon.name;
-        img.style.width = `${iconSize - 8}px`;
-        img.style.height = `${iconSize - 8}px`;
-        img.style.maxWidth = '100%';
-
-        const icontext = document.createElement('p');
-        icontext.innerText = icon.name;
-        icontext.style.textAlign = 'center';
-        icontext.style.marginTop = '5px';
-        icontext.style.color = 'white';
-        icontext.style.fontFamily = 'Tahoma, sans-serif';
-        icontext.style.fontSize = 'clamp(12px, 2vw, 16px)';
-        icontext.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
-
-        icongen.appendChild(img);
-        icongen.appendChild(icontext);
-
-        icongen._iconIndex = index;
-
-        let dragStartX = 0, dragStartY = 0;
-        let dragIconStartPositions = [];
-        let dragMoved = false;
-        let dragActive = false;
-        let dragPointerId = null;
-
-        icongen.addEventListener('mousedown', function(e) {
-            if (e.button !== 0) return;
-            if (isSelecting) return;
-            dragMoved = false;
-            dragActive = true;
-            dragPointerId = null;
-            dragStartX = e.clientX;
-            dragStartY = e.clientY;
-            if (!icongen.classList.contains('selected')) {
-                clearSelection();
-                icongen.classList.add('selected');
-            }
-            dragIconStartPositions = getIconElements()
-                .filter(div => div.classList.contains('selected'))
-                .map(div => ({
-                    div,
-                    startLeft: parseInt(div.style.left, 10),
-                    startTop: parseInt(div.style.top, 10)
-                }));
-
-            function onMouseMove(ev) {
-                const dx = ev.clientX - dragStartX;
-                const dy = ev.clientY - dragStartY;
-                if (!dragMoved && (Math.abs(dx) > 3 || Math.abs(dy) > 3)) {
-                    dragMoved = true;
-                    isDragging = true;
-                }
-                if (dragMoved) {
-                    dragIconStartPositions.forEach(({div, startLeft, startTop}) => {
-                        div.style.left = `${startLeft + dx}px`;
-                        div.style.top = `${startTop + dy}px`;
-                    });
-                }
-            }
-
-            function onMouseUp(ev) {
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-                if (dragMoved) {
-                    isDragging = false;
-                    dragActive = false;
-                    dragIconStartPositions = [];
-                    // px - grid konvertalas, fix1
-                    getIconElements().forEach((div, idx) => {
-                        const left = parseInt(div.style.left, 10);
-                        const top = parseInt(div.style.top, 10);
-                        let gridX = Math.round((left - 24) / (iconSize + iconSpacing));
-                        let gridY = Math.round((top - 24) / (iconSize + iconSpacing));
-                        // fix2
-                        gridX = clamp(gridX, 0, iconsPerRow - 1);
-                        gridY = clamp(gridY, 0, iconsPerCol - 1);
-                        icons[idx].gridX = gridX;
-                        icons[idx].gridY = gridY;
-                    });
-                    redrawIcons();
-                    ev.preventDefault();
-                } else {
-                    // ha csak sima kattintas, akkor nyisson meg paget
-                    window.open(icon.link, '_blank');
-                }
-            }
-
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-            e.preventDefault();
-        });
-
-        icongen.addEventListener('touchstart', function(e) {
-            if (isSelecting) return;
-            if (e.touches.length > 1) return; // ha tobbszor nyom ra ignoralja
-            dragMoved = false;
-            dragActive = true;
-            dragPointerId = e.touches[0].identifier;
-            const touch = e.touches[0];
-            dragStartX = touch.clientX;
-            dragStartY = touch.clientY;
-            if (!icongen.classList.contains('selected')) {
-                clearSelection();
-                icongen.classList.add('selected');
-            }
-            dragIconStartPositions = getIconElements()
-                .filter(div => div.classList.contains('selected'))
-                .map(div => ({
-                    div,
-                    startLeft: parseInt(div.style.left, 10),
-                    startTop: parseInt(div.style.top, 10)
-                }));
-        }, { passive: true });
-
-        icongen.addEventListener('touchmove', function(e) {
-            if (!dragActive) return;
-            let touch = null;
-            for (let i = 0; i < e.touches.length; i++) {
-                if (e.touches[i].identifier === dragPointerId) {
-                    touch = e.touches[i];
-                    break;
-                }
-            }
-            if (!touch) return;
-            const dx = touch.clientX - dragStartX;
-            const dy = touch.clientY - dragStartY;
-            if (!dragMoved && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
-                dragMoved = true;
-                isDragging = true;
-            }
-            if (dragMoved) {
-                dragIconStartPositions.forEach(({div, startLeft, startTop}) => {
-                    div.style.left = `${startLeft + dx}px`;
-                    div.style.top = `${startTop + dy}px`;
-                });
-            }
-            e.preventDefault();
-        }, { passive: false });
-
-        icongen.addEventListener('touchend', function(e) {
-            if (!dragActive) return;
-            dragActive = false;
-            isDragging = false;
-            dragPointerId = null;
-            if (dragMoved) {
-                getIconElements().forEach((div, idx) => {
-                    const left = parseInt(div.style.left, 10);
-                    const top = parseInt(div.style.top, 10);
-                    let gridX = Math.round((left - 24) / (iconSize + iconSpacing));
-                    let gridY = Math.round((top - 24) / (iconSize + iconSpacing));
-                    // fix3
-                    gridX = clamp(gridX, 0, iconsPerRow - 1);
-                    gridY = clamp(gridY, 0, iconsPerCol - 1);
-                    icons[idx].gridX = gridX;
-                    icons[idx].gridY = gridY;
-                });
-                redrawIcons();
-            } else {
-                window.open(icon.link, '_blank');
-            }
-            dragIconStartPositions = [];
-            e.preventDefault();
-        }, { passive: false });
-
-        iconContainer.appendChild(icongen);
-    });
-
-    body.appendChild(iconContainer);
-    refreshDragHandlers();
-}
-
-function redrawIcons() {
-    getIconElements().forEach((iconDiv, i) => {
-        const icon = icons[i];
-        const { left, top } = getIconPosition(icon);
-        iconDiv.style.left = `${left}px`;
-        iconDiv.style.top = `${top}px`;
-        iconDiv.style.width = `${iconSize}px`;
-    });
-}
-
-
-let selectionRect = null;
-let startX = 0, startY = 0;
-let isSelecting = false;
-
-function getIconElements() {
-    return Array.from(document.querySelectorAll('#icon-container > .desktop-icon'));
+function selectedApps() {
+    return apps.filter(a => a.el.classList.contains('selected'));
 }
 
 function clearSelection() {
-    getIconElements().forEach(iconDiv => {
-        iconDiv.classList.remove('selected');
+    apps.forEach(a => a.el.classList.remove('selected'));
+}
+
+function createIcons() {
+    apps.forEach(app => {
+        const el = document.createElement('div');
+        el.className = 'desktop-icon';
+        el.tabIndex = 0;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'icon-img-wrap';
+        const img = document.createElement('img');
+        img.src = app.img;
+        img.alt = '';
+        const tint = document.createElement('div');
+        tint.className = 'icon-tint';
+        tint.style.webkitMaskImage = `url("${app.img}")`;
+        tint.style.maskImage = `url("${app.img}")`;
+        wrap.append(img, tint);
+
+        const label = document.createElement('div');
+        label.className = 'icon-label';
+        label.textContent = app.name;
+
+        el.append(wrap, label);
+        app.el = el;
+        attachIconHandlers(app);
+        iconContainer.appendChild(el);
     });
 }
 
-function selectIconsInRect(rect) {
-    getIconElements().forEach(iconDiv => {
-        const iconRect = iconDiv.getBoundingClientRect();
-        if (
-            rect.left < iconRect.right &&
-            rect.right > iconRect.left &&
-            rect.top < iconRect.bottom &&
-            rect.bottom > iconRect.top
-        ) {
-            iconDiv.classList.add('selected');
-        } else {
-            iconDiv.classList.remove('selected');
+function attachIconHandlers(app) {
+    const el = app.el;
+    let drag = null;
+
+    el.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0) return;
+        e.stopPropagation();
+        hideContextMenu();
+
+        if (e.ctrlKey) {
+            el.classList.toggle('selected');
+        } else if (!el.classList.contains('selected')) {
+            clearSelection();
+            el.classList.add('selected');
         }
+
+        el.setPointerCapture(e.pointerId);
+        drag = {
+            x: e.clientX,
+            y: e.clientY,
+            moved: false,
+            touch: e.pointerType !== 'mouse',
+            items: selectedApps().map(a => ({ app: a, left: a.el.offsetLeft, top: a.el.offsetTop }))
+        };
+    });
+
+    el.addEventListener('pointermove', (e) => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x;
+        const dy = e.clientY - drag.y;
+        if (!drag.moved && Math.hypot(dx, dy) > 5) {
+            drag.moved = true;
+            drag.items.forEach(({ app }) => app.el.classList.add('dragging'));
+        }
+        if (drag.moved) {
+            drag.items.forEach(({ app, left, top }) => {
+                app.el.style.left = `${left + dx}px`;
+                app.el.style.top = `${top + dy}px`;
+            });
+        }
+    });
+
+    el.addEventListener('pointerup', () => {
+        if (!drag) return;
+        const d = drag;
+        drag = null;
+        if (d.moved) {
+            d.items.forEach(({ app }) => app.el.classList.remove('dragging'));
+            snapIcons(d.items.map(i => i.app));
+        } else if (d.touch) {
+            // no double-click on touch screens: a tap opens
+            openApp(app);
+        }
+    });
+
+    el.addEventListener('pointercancel', () => {
+        if (!drag) return;
+        drag.items.forEach(({ app }) => app.el.classList.remove('dragging'));
+        drag = null;
+        positionIcons();
+    });
+
+    el.addEventListener('dblclick', () => openApp(app));
+
+    el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') selectedApps().forEach(openApp);
+    });
+
+    el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showContextMenu(e.clientX, e.clientY, [
+            { label: 'Open', bold: true, action: () => openApp(app) },
+            { sep: true },
+            { label: 'Properties', action: () => openProperties(app) }
+        ]);
     });
 }
 
-let isDragging = false;
+// Snap dragged icons onto the grid; if any lands on an occupied cell, undo the move.
+function snapIcons(moved) {
+    const { cols, rows } = gridSize();
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+    const targets = moved.map(app => ({
+        app,
+        col: clamp(Math.round((app.el.offsetLeft - ORIGIN) / CELL_W), 0, cols - 1),
+        row: clamp(Math.round((app.el.offsetTop - ORIGIN) / CELL_H), 0, rows - 1)
+    }));
 
-function addDragHandlers(iconDiv) {
-    // mar nem szukseges, mas logika kezeli
+    const occupied = new Set(apps.filter(a => !moved.includes(a)).map(a => `${a.col},${a.row}`));
+    const ok = targets.every(t => {
+        const key = `${t.col},${t.row}`;
+        if (occupied.has(key)) return false;
+        occupied.add(key);
+        return true;
+    });
+
+    if (ok) targets.forEach(t => { t.app.col = t.col; t.app.row = t.row; });
+    positionIcons();
 }
 
-function refreshDragHandlers() {
-    // mar nem szukseges, mas logika kezeli
+// Keep icons on screen when the window shrinks
+function fitIconsToScreen() {
+    const { cols, rows } = gridSize();
+    if (apps.some(a => a.col >= cols || a.row >= rows)) arrangeIcons();
+    else positionIcons();
 }
 
-body.addEventListener('mousemove', function(e) {
-    if (!isSelecting || !selectionRect) return;
-    handleSelectionMove(e.clientX, e.clientY);
-});
+// ---------------------------------------------------------------
+// Rubber-band selection on the desktop
+// ---------------------------------------------------------------
 
-body.addEventListener('mouseup', function(e) {
-    if (!isSelecting) return;
-    isSelecting = false;
-    if (selectionRect) {
-        selectionRect.remove();
-        selectionRect = null;
-    }
-});
+let band = null;
 
-body.addEventListener('touchmove', function(e) {
-    if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        if (isSelecting && selectionRect) {
-            handleSelectionMove(touch.clientX, touch.clientY);
-        }
-    }
-}, { passive: false });
-
-body.addEventListener('touchend', function(e) {
-    if (isSelecting && selectionRect) {
-        isSelecting = false;
-        selectionRect.remove();
-        selectionRect = null;
-    }
-}, { passive: false });
-
-
-function handleSelectionMove(clientX, clientY) {
-    const rectLeft = Math.min(startX, clientX);
-    const rectTop = Math.min(startY, clientY);
-    const rectWidth = Math.abs(clientX - startX);
-    const rectHeight = Math.abs(clientY - startY);
-
-    selectionRect.style.left = `${rectLeft}px`;
-    selectionRect.style.top = `${rectTop}px`;
-    selectionRect.style.width = `${rectWidth}px`;
-    selectionRect.style.height = `${rectHeight}px`;
-
-    const selectionBox = {
-        left: rectLeft,
-        top: rectTop,
-        right: rectLeft + rectWidth,
-        bottom: rectTop + rectHeight
-    };
-    selectIconsInRect(selectionBox);
-}
-
-body.addEventListener('mousedown', function(e) {
+desktop.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
-    if (e.target.closest('#icon-container > .desktop-icon')) return;
-    isSelecting = true;
-    startX = e.clientX;
-    startY = e.clientY;
+    hideContextMenu();
     clearSelection();
-    selectionRect = document.createElement('div');
-    selectionRect.id = 'selection-rect';
-    selectionRect.style.position = 'fixed';
-    selectionRect.style.zIndex = '9999';
-    selectionRect.style.border = '1.5px dashed #3399ff';
-    selectionRect.style.background = 'rgba(51,153,255,0.15)';
-    selectionRect.style.pointerEvents = 'none';
-    selectionRect.style.left = `${startX}px`;
-    selectionRect.style.top = `${startY}px`;
-    selectionRect.style.width = '0px';
-    selectionRect.style.height = '0px';
-    document.body.appendChild(selectionRect);
+    desktop.setPointerCapture(e.pointerId);
+    const rect = document.createElement('div');
+    rect.id = 'selection-rect';
+    document.body.appendChild(rect);
+    band = { x: e.clientX, y: e.clientY, rect };
+    updateBand(e.clientX, e.clientY);
 });
 
-body.addEventListener('touchstart', function(e) {
-    if (e.touches.length !== 1) return;
-    const touch = e.touches[0];
-    if (e.target.closest('#icon-container > .desktop-icon')) return;
-    isSelecting = true;
-    startX = touch.clientX;
-    startY = touch.clientY;
-    clearSelection();
-    selectionRect = document.createElement('div');
-    selectionRect.id = 'selection-rect';
-    selectionRect.style.position = 'fixed';
-    selectionRect.style.zIndex = '9999';
-    selectionRect.style.border = '1.5px dashed #3399ff';
-    selectionRect.style.background = 'rgba(51,153,255,0.15)';
-    selectionRect.style.pointerEvents = 'none';
-    selectionRect.style.left = `${startX}px`;
-    selectionRect.style.top = `${startY}px`;
-    selectionRect.style.width = '0px';
-    selectionRect.style.height = '0px';
-    document.body.appendChild(selectionRect);
-}, { passive: false });
+desktop.addEventListener('pointermove', (e) => {
+    if (band) updateBand(e.clientX, e.clientY);
+});
 
-const selectionStyle = document.createElement('style');
-selectionStyle.textContent = `
-    #icon-container > .desktop-icon.selected {
-        background: rgba(51,153,255,0.25);
-        border-radius: 8px;
-        box-shadow: 0 0 0 2px #3399ff;
-    }
-    #icon-container > .desktop-icon {
-        transition: box-shadow 0.1s, background 0.1s;
-        touch-action: none;
-    }
-    #selection-rect {
-        pointer-events: none;
-    }
-    @media (max-width: 600px) {
-        #icon-container > .desktop-icon {
-            width: 56px !important;
-        }
-        #icon-container img {
-            width: 48px !important;
-            height: 48px !important;
-        }
-    }
-`;
-document.head.appendChild(selectionStyle);
-
-function responsiveRedraw() {
-    if (window.innerWidth < 600) {
-        iconSize = 56;
-        iconSpacing = 12;
-    } else {
-        iconSize = 72;
-        iconSpacing = 24;
-    }
-    calculateGrid();
-    redrawIcons();
+function endBand() {
+    if (!band) return;
+    band.rect.remove();
+    band = null;
 }
-window.addEventListener('resize', () => {
-    responsiveRedraw();
+desktop.addEventListener('pointerup', endBand);
+desktop.addEventListener('pointercancel', endBand);
+
+function updateBand(cx, cy) {
+    const left = Math.min(band.x, cx);
+    const top = Math.min(band.y, cy);
+    const right = Math.max(band.x, cx);
+    const bottom = Math.max(band.y, cy);
+    Object.assign(band.rect.style, {
+        left: `${left}px`, top: `${top}px`,
+        width: `${right - left}px`, height: `${bottom - top}px`
+    });
+    apps.forEach(app => {
+        const r = app.el.getBoundingClientRect();
+        const hit = left < r.right && right > r.left && top < r.bottom && bottom > r.top;
+        app.el.classList.toggle('selected', hit);
+    });
+}
+
+// ---------------------------------------------------------------
+// Context menu
+// ---------------------------------------------------------------
+
+const contextMenu = document.getElementById('context-menu');
+
+function showContextMenu(x, y, items) {
+    contextMenu.replaceChildren();
+    items.forEach(item => {
+        if (item.sep) {
+            const sep = document.createElement('div');
+            sep.className = 'xp-menu-sep';
+            contextMenu.appendChild(sep);
+            return;
+        }
+        const el = document.createElement('div');
+        el.className = 'xp-menu-item';
+        el.textContent = item.label;
+        if (item.bold) el.style.fontWeight = 'bold';
+        el.addEventListener('click', () => {
+            hideContextMenu();
+            item.action();
+        });
+        contextMenu.appendChild(el);
+    });
+    contextMenu.hidden = false;
+    const w = contextMenu.offsetWidth;
+    const h = contextMenu.offsetHeight;
+    contextMenu.style.left = `${Math.min(x, window.innerWidth - w - 2)}px`;
+    contextMenu.style.top = `${Math.min(y, window.innerHeight - h - 32)}px`;
+}
+
+function hideContextMenu() {
+    contextMenu.hidden = true;
+}
+
+desktop.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    showContextMenu(e.clientX, e.clientY, [
+        { label: 'Arrange Icons', action: arrangeIcons },
+        { label: 'Refresh', action: refreshDesktop },
+        { sep: true },
+        { label: 'Properties', action: openAbout }
+    ]);
 });
 
-calculateGrid();
+document.addEventListener('pointerdown', (e) => {
+    if (!contextMenu.contains(e.target)) hideContextMenu();
+});
+
+function refreshDesktop() {
+    iconContainer.style.visibility = 'hidden';
+    setTimeout(() => { iconContainer.style.visibility = ''; }, 120);
+}
+
+// ---------------------------------------------------------------
+// Windows
+// ---------------------------------------------------------------
+
+const windowLayer = document.getElementById('window-layer');
+const openWindows = new Map();
+let zTop = 10;
+let cascade = 0;
+
+function openWindow({ id, title, icon, url, content, width = 820, height = 560, resizable = true, maximizeOnSmall = resizable, onClose }) {
+    if (openWindows.has(id)) {
+        focusWindow(id);
+        return openWindows.get(id);
+    }
+
+    const win = document.createElement('div');
+    win.className = 'xp-window';
+
+    const bar = document.createElement('div');
+    bar.className = 'xp-titlebar';
+    if (icon) {
+        const img = document.createElement('img');
+        img.src = icon;
+        img.alt = '';
+        bar.appendChild(img);
+    }
+    const titleEl = document.createElement('span');
+    titleEl.className = 'xp-title';
+    titleEl.textContent = title;
+    bar.appendChild(titleEl);
+
+    const mkBtn = (cls, label, fn) => {
+        const b = document.createElement('button');
+        b.className = `xp-ctrl ${cls}`;
+        b.setAttribute('aria-label', label);
+        b.title = label;
+        b.addEventListener('pointerdown', e => e.stopPropagation());
+        b.addEventListener('click', fn);
+        bar.appendChild(b);
+    };
+    mkBtn('min', 'Minimize', () => minimizeWindow(id));
+    if (resizable) mkBtn('max', 'Maximize', () => toggleMaximize(id));
+    mkBtn('close', 'Close', () => closeWindow(id));
+
+    const body = document.createElement('div');
+    body.className = 'xp-body';
+    if (url) {
+        const frame = document.createElement('iframe');
+        frame.src = url;
+        frame.title = title;
+        body.appendChild(frame);
+    } else if (content) {
+        body.appendChild(content);
+    }
+
+    win.append(bar, body);
+
+    // initial size/position (cascade like XP)
+    const layerW = windowLayer.clientWidth;
+    const layerH = windowLayer.clientHeight;
+    const w = Math.min(width, layerW - 20);
+    const h = Math.min(height, layerH - 20);
+    const offset = (cascade++ % 6) * 26;
+    win.style.width = `${w}px`;
+    win.style.height = `${h}px`;
+    win.style.left = `${Math.max(0, (layerW - w) / 2 - 80 + offset)}px`;
+    win.style.top = `${Math.max(0, (layerH - h) / 2 - 60 + offset)}px`;
+    // phones (portrait or landscape): open full-screen
+    if (maximizeOnSmall && isSmallScreen()) win.classList.add('maximized');
+
+    if (resizable) {
+        const grip = document.createElement('div');
+        grip.className = 'xp-resize';
+        win.appendChild(grip);
+        makeResizable(win, grip);
+    }
+
+    makeDraggable(win, bar);
+    if (resizable) bar.addEventListener('dblclick', () => toggleMaximize(id));
+    win.addEventListener('pointerdown', () => focusWindow(id), true);
+
+    windowLayer.appendChild(win);
+
+    const task = Taskbar.addTask(id, title, icon, () => {
+        if (win.classList.contains('minimized') || !isFocused(id)) focusWindow(id);
+        else minimizeWindow(id);
+    });
+
+    const entry = { win, task, onClose };
+    openWindows.set(id, entry);
+    focusWindow(id);
+    return entry;
+}
+
+function isSmallScreen() {
+    return window.innerWidth < 600 || window.innerHeight < 500;
+}
+
+const isTouch = window.matchMedia('(pointer: coarse)').matches;
+
+function isFocused(id) {
+    const entry = openWindows.get(id);
+    return entry && !entry.win.classList.contains('inactive');
+}
+
+function focusWindow(id) {
+    const entry = openWindows.get(id);
+    if (!entry) return;
+    entry.win.classList.remove('minimized');
+    entry.win.style.zIndex = ++zTop;
+    openWindows.forEach((e, key) => e.win.classList.toggle('inactive', key !== id));
+    Taskbar.setActiveTask(id);
+}
+
+function minimizeWindow(id) {
+    const entry = openWindows.get(id);
+    if (!entry) return;
+    entry.win.classList.add('minimized', 'inactive');
+    Taskbar.setActiveTask(null);
+    // focus the next visible window, like XP does
+    const next = [...openWindows.entries()]
+        .filter(([, e]) => !e.win.classList.contains('minimized'))
+        .sort((a, b) => b[1].win.style.zIndex - a[1].win.style.zIndex)[0];
+    if (next) focusWindow(next[0]);
+}
+
+function toggleMaximize(id) {
+    const entry = openWindows.get(id);
+    if (entry) entry.win.classList.toggle('maximized');
+}
+
+function closeWindow(id) {
+    const entry = openWindows.get(id);
+    if (!entry) return;
+    entry.win.remove();
+    Taskbar.removeTask(id);
+    openWindows.delete(id);
+    if (entry.onClose) entry.onClose();
+}
+
+// Clicking inside an iframe doesn't bubble to us; detect it via window blur.
+window.addEventListener('blur', () => {
+    setTimeout(() => {
+        const active = document.activeElement;
+        if (active && active.tagName === 'IFRAME') {
+            for (const [id, e] of openWindows) {
+                if (e.win.contains(active)) { focusWindow(id); break; }
+            }
+        }
+    }, 0);
+});
+
+function makeDraggable(win, handle) {
+    let start = null;
+    handle.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || win.classList.contains('maximized')) return;
+        handle.setPointerCapture(e.pointerId);
+        start = { x: e.clientX, y: e.clientY, left: win.offsetLeft, top: win.offsetTop };
+        document.body.classList.add('dragging-window');
+    });
+    handle.addEventListener('pointermove', (e) => {
+        if (!start) return;
+        const maxTop = windowLayer.clientHeight - 29;
+        win.style.left = `${start.left + e.clientX - start.x}px`;
+        win.style.top = `${Math.max(0, Math.min(maxTop, start.top + e.clientY - start.y))}px`;
+    });
+    const end = () => {
+        start = null;
+        document.body.classList.remove('dragging-window');
+    };
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+}
+
+function makeResizable(win, grip) {
+    let start = null;
+    grip.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        grip.setPointerCapture(e.pointerId);
+        start = { x: e.clientX, y: e.clientY, w: win.offsetWidth, h: win.offsetHeight };
+        document.body.classList.add('dragging-window');
+    });
+    grip.addEventListener('pointermove', (e) => {
+        if (!start) return;
+        win.style.width = `${Math.max(260, start.w + e.clientX - start.x)}px`;
+        win.style.height = `${Math.max(140, start.h + e.clientY - start.y)}px`;
+    });
+    const end = () => {
+        start = null;
+        document.body.classList.remove('dragging-window');
+    };
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+}
+
+// ---------------------------------------------------------------
+// Dialogs
+// ---------------------------------------------------------------
+
+function dialog(html, buttons = []) {
+    const box = document.createElement('div');
+    box.className = 'xp-dialog';
+    box.innerHTML = html;
+    if (buttons.length) {
+        const row = document.createElement('div');
+        row.className = 'xp-dialog-buttons';
+        buttons.forEach(({ label, action }) => {
+            const b = document.createElement('button');
+            b.className = 'xp-btn';
+            b.textContent = label;
+            b.addEventListener('click', action);
+            row.appendChild(b);
+        });
+        box.appendChild(row);
+    }
+    return box;
+}
+
+function openAbout() {
+    openWindow({
+        id: 'about',
+        title: 'System Properties',
+        icon: 'img/windows-xp.jpg',
+        width: 360,
+        height: 240,
+        resizable: false,
+        content: dialog(`
+            <h2>csabi.zip</h2>
+            <p>Microsoft Windows XP<br>Media Center Edition<br>Version 2005, Service Pack 2</p>
+            <p>Registered to:<br>&nbsp;&nbsp;csabi<br>&nbsp;&nbsp;<a href="https://github.com/FCsab" target="_blank" rel="noopener">github.com/FCsab</a></p>
+        `, [{ label: 'OK', action: () => closeWindow('about') }])
+    });
+}
+
+function openProperties(app) {
+    const id = `props-${app.id}`;
+    const host = (() => {
+        try { return new URL(app.url, location.href).host; } catch { return app.url; }
+    })();
+    openWindow({
+        id,
+        title: `${app.name} Properties`,
+        icon: app.img,
+        width: 340,
+        height: 220,
+        resizable: false,
+        content: dialog(`
+            <h2>${app.name}</h2>
+            <p>Type: Internet Shortcut<br>Description: ${app.desc}<br>Target: ${host}</p>
+        `, [
+            { label: 'Open', action: () => { closeWindow(id); openApp(app); } },
+            { label: 'Cancel', action: () => closeWindow(id) }
+        ])
+    });
+}
+
+// ---------------------------------------------------------------
+// Start menu
+// ---------------------------------------------------------------
+
+function buildStartMenu() {
+    const left = document.getElementById('sm-left');
+    const right = document.getElementById('sm-right');
+
+    const item = (img, title, desc, action) => {
+        const li = document.createElement('li');
+        li.className = 'sm-item';
+        li.tabIndex = 0;
+        const icon = document.createElement('img');
+        icon.src = img;
+        icon.alt = '';
+        const text = document.createElement('div');
+        text.className = 'sm-item-text';
+        const b = document.createElement('b');
+        b.textContent = title;
+        text.appendChild(b);
+        if (desc) {
+            const s = document.createElement('small');
+            s.textContent = desc;
+            text.appendChild(s);
+        }
+        li.append(icon, text);
+        const run = () => { Taskbar.setStartMenu(false); action(); };
+        li.addEventListener('click', run);
+        li.addEventListener('keydown', e => { if (e.key === 'Enter') run(); });
+        return li;
+    };
+    const sep = () => {
+        const li = document.createElement('li');
+        li.className = 'sm-sep';
+        return li;
+    };
+
+    apps.forEach(app => left.appendChild(item(app.img, app.name, app.desc, () => openApp(app))));
+
+    right.appendChild(item('img/github.png', 'Source Code', null,
+        () => window.open('https://github.com/FCsab/FCsab.github.io', '_blank', 'noopener')));
+    right.appendChild(item('img/japan.png', 'Japanese Practice', null,
+        () => openApp(apps.find(a => a.id === 'japanese'))));
+    right.appendChild(sep());
+    right.appendChild(item('img/windows-xp.jpg', 'System Properties', null, openAbout));
+
+    // header avatar: GitHub profile picture, falls back to the wallpaper
+    const avatar = document.querySelector('.sm-avatar');
+    avatar.addEventListener('error', () => { avatar.src = 'img/windows-xp.jpg'; }, { once: true });
+    avatar.src = 'https://github.com/FCsab.png?size=96';
+
+    document.querySelector('[data-action="logoff"]').addEventListener('click', () => location.reload());
+    document.querySelector('[data-action="shutdown"]').addEventListener('click', () => {
+        Taskbar.setStartMenu(false);
+        showShutdown();
+    });
+}
+
+// ---------------------------------------------------------------
+// Turn Off Computer
+// ---------------------------------------------------------------
+
+function showShutdown() {
+    const overlay = document.createElement('div');
+    overlay.className = 'shutdown-overlay';
+    overlay.innerHTML = `
+        <div class="shutdown-box">
+            <div class="shutdown-top"><span>Turn off computer</span></div>
+            <div class="shutdown-mid">
+                <button class="shutdown-opt" data-opt="standby"><span class="opt-standby">&#x263E;</span>Stand By</button>
+                <button class="shutdown-opt" data-opt="off"><span class="opt-off">&#x23FB;</span>Turn Off</button>
+                <button class="shutdown-opt" data-opt="restart"><span class="opt-restart">&#x21BB;</span>Restart</button>
+            </div>
+            <div class="shutdown-bottom"><button class="xp-btn" data-opt="cancel">Cancel</button></div>
+        </div>`;
+
+    const blackScreen = (text) => {
+        overlay.remove();
+        const screen = document.createElement('div');
+        screen.className = 'black-screen';
+        screen.innerHTML = text;
+        screen.addEventListener('click', () => screen.remove());
+        document.body.appendChild(screen);
+    };
+
+    overlay.addEventListener('click', (e) => {
+        const opt = e.target.closest('[data-opt]')?.dataset.opt;
+        if (e.target === overlay || opt === 'cancel') overlay.remove();
+        else if (opt === 'standby') blackScreen('');
+        else if (opt === 'off') blackScreen('It is now safe to turn off<br>your computer.');
+        else if (opt === 'restart') location.reload();
+    });
+    document.body.appendChild(overlay);
+}
+
+// ---------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------
+
 createIcons();
-responsiveRedraw();
+arrangeIcons();
+buildStartMenu();
+window.addEventListener('resize', fitIconsToScreen);
+
+setTimeout(() => {
+    if (document.querySelector('.balloon')) return;
+    Taskbar.balloon('Welcome to csabi.zip', isTouch
+        ? 'Tap an icon to open it, or tap start.'
+        : 'Double-click an icon to open it, or click start.');
+}, 800);

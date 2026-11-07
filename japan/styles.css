@@ -268,3 +268,61 @@ input[type="text"]:focus {
     padding: 1.5em;
   }
 }
+
+@media (max-width: 520px) {
+  body {
+    padding: 1em 0.75em;
+  }
+
+  h1 {
+    font-size: 1.7em;
+    margin-bottom: 0.6em;
+  }
+
+  .mode-selector {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6em;
+  }
+
+  .mode-selector button {
+    margin: 0;
+  }
+
+  #quiz-section {
+    padding: 1em;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  #feedback {
+    margin-top: 0.5em;
+    padding: 0.5em;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5em;
+    margin-top: 1em;
+  }
+
+  .stat-item {
+    margin: 0;
+    min-width: 0;
+    padding: 0.6em 0.3em;
+  }
+
+  .stat-number {
+    font-size: 1.3em;
+  }
+
+  .stat-label {
+    font-size: 0.72em;
+  }
+}

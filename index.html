@@ -4,9 +4,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>csabi.zip</title>
+    <link rel="stylesheet" href="main/desktop.css">
 </head>
-<body id="body">
+<body>
+    <div id="desktop">
+        <div id="icon-container"></div>
+    </div>
+
+    <div id="window-layer"></div>
+
+    <!-- Start menu -->
+    <div id="start-menu" hidden>
+        <div class="sm-header">
+            <img class="sm-avatar" src="img/windows-xp.jpg" alt="">
+            <span class="sm-user">csabi</span>
+        </div>
+        <div class="sm-body">
+            <ul class="sm-left" id="sm-left"></ul>
+            <ul class="sm-right" id="sm-right"></ul>
+        </div>
+        <div class="sm-footer">
+            <button class="sm-footer-btn" data-action="logoff"><span class="sm-ico sm-ico-logoff">&#x1F511;&#xFE0E;</span>Log Off</button>
+            <button class="sm-footer-btn" data-action="shutdown"><span class="sm-ico sm-ico-power">&#x23FB;</span>Turn Off Computer</button>
+        </div>
+    </div>
+
+    <!-- Taskbar -->
+    <div id="taskbar">
+        <button id="start-button" aria-haspopup="true" aria-expanded="false">
+            <svg class="win-flag" viewBox="0 0 32 32" aria-hidden="true">
+                <path fill="#f35325" d="M3 6.5c3-1.6 7-2 11 .4v9.4c-4-2.3-8-2-11-.4z"/>
+                <path fill="#81bc06" d="M16 7.6c4 2.4 8 2.2 12 .4v9.4c-4 1.8-8 2-12-.4z"/>
+                <path fill="#05a6f0" d="M3 18c3-1.6 7-2 11 .4v9.4c-4-2.3-8-2-11-.4z"/>
+                <path fill="#ffba08" d="M16 19.1c4 2.4 8 2.2 12 .4v9.4c-4 1.8-8 2-12-.4z"/>
+            </svg>
+            <span>start</span>
+        </button>
+        <div id="task-area"></div>
+        <div id="tray">
+            <button id="tray-chevron" title="Show hidden icons" aria-label="Show hidden icons"></button>
+            <div id="tray-icons"></div>
+            <span id="clock"></span>
+        </div>
+    </div>
+
+    <div id="context-menu" class="xp-menu" hidden></div>
+
     <script src="main/taskbar.js"></script>
     <script src="main/script.js"></script>
+    <script src="main/snake.js"></script>
 </body>
 </html>
